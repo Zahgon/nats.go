@@ -1,16 +1,3 @@
-// Copyright 2015-2023 The NATS Authors
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package main
 
 import (
@@ -19,13 +6,11 @@ import (
 	"log"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/bench"
 )
 
-// Some sane defaults
 const (
 	DefaultNumMsgs     = 100000
 	DefaultNumPubs     = 1
@@ -33,15 +18,9 @@ const (
 	DefaultMessageSize = 128
 )
 
-func usage() {
-	log.Printf("Usage: nats-bench [-s server (%s)] [--tls] [-np NUM_PUBLISHERS] [-ns NUM_SUBSCRIBERS] [-n NUM_MSGS] [-ms MESSAGE_SIZE] [-csv csvfile] [-creds file] [-nkey file] <subject>\n", nats.DefaultURL)
-	flag.PrintDefaults()
-}
+func usage() { _ = "STUB: not implemented"; return }
 
-func showUsageAndExit(exitcode int) {
-	usage()
-	os.Exit(exitcode)
-}
+func showUsageAndExit(exitcode int) { _ = "STUB: not implemented"; return }
 
 var benchmark *bench.Benchmark
 
@@ -74,19 +53,16 @@ func main() {
 		log.Fatal("Number of messages should be greater than zero.")
 	}
 
-	// Connect Options.
 	opts := []nats.Option{nats.Name("NATS Benchmark")}
 
 	if *userCreds != "" && *nkeyFile != "" {
 		log.Fatal("specify -seed or -creds")
 	}
 
-	// Use UserCredentials
 	if *userCreds != "" {
 		opts = append(opts, nats.UserCredentials(*userCreds))
 	}
 
-	// Use Nkey authentication.
 	if *nkeyFile != "" {
 		opt, err := nats.NkeyOptionFromSeed(*nkeyFile)
 		if err != nil {
@@ -95,7 +71,6 @@ func main() {
 		opts = append(opts, opt)
 	}
 
-	// Use TLS specified
 	if *tls {
 		opts = append(opts, nats.Secure(nil))
 	}
@@ -107,7 +82,6 @@ func main() {
 
 	donewg.Add(*numPubs + *numSubs)
 
-	// Run Subscribers first
 	startwg.Add(*numSubs)
 	for i := 0; i < *numSubs; i++ {
 		nc, err := nats.Connect(*urls, opts...)
@@ -120,7 +94,6 @@ func main() {
 	}
 	startwg.Wait()
 
-	// Now Publishers
 	startwg.Add(*numPubs)
 	pubCounts := bench.MsgsPerClient(*numMsgs, *numPubs)
 	for i := 0; i < *numPubs; i++ {
@@ -150,48 +123,11 @@ func main() {
 }
 
 func runPublisher(nc *nats.Conn, startwg, donewg *sync.WaitGroup, numMsgs int, msgSize int) {
-	startwg.Done()
-
-	args := flag.Args()
-	subj := args[0]
-	var msg []byte
-	if msgSize > 0 {
-		msg = make([]byte, msgSize)
-	}
-
-	start := time.Now()
-
-	for i := 0; i < numMsgs; i++ {
-		nc.Publish(subj, msg)
-	}
-	nc.Flush()
-	benchmark.AddPubSample(bench.NewSample(numMsgs, msgSize, start, time.Now(), nc))
-
-	donewg.Done()
+	_ = "STUB: not implemented"
+	return
 }
 
 func runSubscriber(nc *nats.Conn, startwg, donewg *sync.WaitGroup, numMsgs int, msgSize int) {
-	args := flag.Args()
-	subj := args[0]
-
-	received := 0
-	ch := make(chan time.Time, 2)
-	sub, _ := nc.Subscribe(subj, func(msg *nats.Msg) {
-		received++
-		if received == 1 {
-			ch <- time.Now()
-		}
-		if received >= numMsgs {
-			ch <- time.Now()
-		}
-	})
-	sub.SetPendingLimits(-1, -1)
-	nc.Flush()
-	startwg.Done()
-
-	start := <-ch
-	end := <-ch
-	benchmark.AddSubSample(bench.NewSample(numMsgs, msgSize, start, end, nc))
-	nc.Close()
-	donewg.Done()
+	_ = "STUB: not implemented"
+	return
 }

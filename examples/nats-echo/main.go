@@ -1,54 +1,25 @@
-// Copyright 2018-2022 The NATS Authors
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package main
 
 import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
-	"time"
 
 	"github.com/nats-io/nats.go"
 )
 
-// NOTE: Can test with demo servers.
-// nats-echo -s demo.nats.io <subject>
+func usage() { _ = "STUB: not implemented"; return }
 
-func usage() {
-	log.Printf("Usage: nats-echo [-s server] [-creds file] [-t] <subject>\n")
-	flag.PrintDefaults()
-}
+func showUsageAndExit(exitcode int) { _ = "STUB: not implemented"; return }
 
-func showUsageAndExit(exitcode int) {
-	usage()
-	os.Exit(exitcode)
-}
+func printMsg(m *nats.Msg, i int) { _ = "STUB: not implemented"; return }
 
-func printMsg(m *nats.Msg, i int) {
-	log.Printf("[#%d] Echoing from [%s] to [%s]: %q", i, m.Subject, m.Reply, m.Data)
-}
-
-func printStatusMsg(m *nats.Msg, i int) {
-	log.Printf("[#%d] Sending status from [%s] to [%s]: %q", i, m.Subject, m.Reply, m.Data)
-}
+func printStatusMsg(m *nats.Msg, i int) { _ = "STUB: not implemented"; return }
 
 type serviceStatus struct {
 	Id  string `json:"id"`
@@ -78,11 +49,10 @@ func main() {
 		showUsageAndExit(1)
 	}
 
-	// Lookup geo if requested
 	if *geoloc {
 		geo = lookupGeo()
 	}
-	// Connect Options.
+
 	opts := []nats.Option{nats.Name(*serviceId)}
 	opts = setupConnOptions(opts)
 
@@ -90,12 +60,10 @@ func main() {
 		log.Fatal("specify -seed or -creds")
 	}
 
-	// Use UserCredentials
 	if *userCreds != "" {
 		opts = append(opts, nats.UserCredentials(*userCreds))
 	}
 
-	// Use Nkey authentication.
 	if *nkeyFile != "" {
 		opt, err := nats.NkeyOptionFromSeed(*nkeyFile)
 		if err != nil {
@@ -104,7 +72,6 @@ func main() {
 		opts = append(opts, opt)
 	}
 
-	// Connect to NATS
 	nc, err := nats.Connect(*urls, opts...)
 	if err != nil {
 		log.Fatal(err)
@@ -117,7 +84,7 @@ func main() {
 		iEcho++
 		printMsg(msg, iEcho)
 		if msg.Reply != "" {
-			// Just echo back what they sent us.
+
 			var payload []byte
 			if geo != "unknown" {
 				payload = []byte(fmt.Sprintf("[%s]: %q", geo, msg.Data))
@@ -145,12 +112,11 @@ func main() {
 	log.Printf("Echo Service listening on [%s]\n", subj)
 	log.Printf("Echo Service (Status) listening on [%s]\n", statusSubj)
 
-	// Now handle signal to terminate so we can drain on exit.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT)
 
 	go func() {
-		// Wait for signal
+
 		<-c
 		log.Printf("<caught signal - draining>")
 		nc.Drain()
@@ -163,55 +129,11 @@ func main() {
 	runtime.Goexit()
 }
 
-func setupConnOptions(opts []nats.Option) []nats.Option {
-	totalWait := 10 * time.Minute
-	reconnectDelay := time.Second
+func setupConnOptions(opts []nats.Option) []nats.Option { _ = "STUB: not implemented"; return nil }
 
-	opts = append(opts, nats.ReconnectWait(reconnectDelay))
-	opts = append(opts, nats.MaxReconnects(int(totalWait/reconnectDelay)))
-	opts = append(opts, nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
-		if !nc.IsClosed() {
-			log.Printf("Disconnected due to: %s, will attempt reconnects for %.0fm", err, totalWait.Minutes())
-		}
-	}))
-	opts = append(opts, nats.ReconnectHandler(func(nc *nats.Conn) {
-		log.Printf("Reconnected [%s]", nc.ConnectedUrl())
-	}))
-	opts = append(opts, nats.ClosedHandler(func(nc *nats.Conn) {
-		if !nc.IsClosed() {
-			log.Fatal("Exiting: no servers available")
-		} else {
-			log.Fatal("Exiting")
-		}
-	}))
-	return opts
-}
-
-// We only want region, country
 type geo struct {
-	// There are others..
 	Region  string
 	Country string
 }
 
-// lookup our current region and country..
-func lookupGeo() string {
-	c := &http.Client{Timeout: 2 * time.Second}
-
-	url := os.Getenv("ECHO_SVC_GEO_URL")
-	if len(url) == 0 {
-		url = "https://ipapi.co/json"
-	}
-
-	resp, err := c.Get(url)
-	if err != nil || resp == nil {
-		log.Fatalf("Could not retrieve geo location data: %v", err)
-	}
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	g := geo{}
-	if err := json.Unmarshal(body, &g); err != nil {
-		log.Fatalf("Error unmarshalling geo: %v", err)
-	}
-	return g.Region + ", " + g.Country
-}
+func lookupGeo() string { _ = "STUB: not implemented"; return "" }
