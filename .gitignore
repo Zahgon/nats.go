@@ -46,3 +46,7 @@ _testmain.go
 
 # VS Code
 .vscode
+
+.aider*
+logs/
+vendor/
